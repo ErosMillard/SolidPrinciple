@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace SolidPrinciple
 {
- 
+    // Single Responsibility Principle 
     class Order
     {
         public int Id { get; set; }
         public List<string> Items { get; set; } = new List<string>();
         public double TotalAmount { get; set; }
-    }   
+    }
 
     class OrderRepository
     {
@@ -22,7 +22,7 @@ namespace SolidPrinciple
         }
     }
 
-
+    // Open/Closed Principle 
     interface IDiscount
     {
         double ApplyDiscount(double price);
@@ -40,7 +40,7 @@ namespace SolidPrinciple
         public double ApplyDiscount(double price) => price - (price * _percentage / 100);
     }
 
-
+    // Liskov Substitution Principle
     abstract class PaymentProcessor
     {
         public abstract void ProcessPayment(double amount);
@@ -62,7 +62,7 @@ namespace SolidPrinciple
         }
     }
 
-  
+    // Interface Segregation Principle 
     interface IOrderProcessor
     {
         void Process(Order order);
@@ -81,7 +81,7 @@ namespace SolidPrinciple
         }
     }
 
-
+    // Dependency Inversion Principle 
     class OrderProcessor : IOrderProcessor
     {
         private readonly OrderRepository _repository;
@@ -97,11 +97,9 @@ namespace SolidPrinciple
 
         public void Process(Order order)
         {
-            Console.WriteLine("Processing order...");
             _paymentProcessor.ProcessPayment(order.TotalAmount);
             _repository.Save(order);
             _emailNotification.SendEmail("Your order has been processed successfully.");
-            Console.WriteLine("Order processing complete.");
         }
     }
 
@@ -109,19 +107,28 @@ namespace SolidPrinciple
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Starting program...");
+            Console.WriteLine("Choose an item to order (1: Donut - $20, 2: Burger - $40):");
+            int itemChoice = int.Parse(Console.ReadLine());
+            double price = itemChoice == 1 ? 20.0 : 40.0;
+            string itemName = itemChoice == 1 ? "Donut" : "Burger";
 
-            Order order = new Order() { Id = 1, TotalAmount = 100.0 };
-            Console.WriteLine("Order created.");
+            Console.WriteLine("Choose a payment method (1: Credit Card, 2: PayPal):");
+            string paymentChoice = Console.ReadLine(); 
 
-            OrderProcessor processor = new OrderProcessor(new OrderRepository(), new CreditCardPayment(), new EmailNotification());
-            Console.WriteLine("Order processor initialized.");
+            PaymentProcessor paymentProcessor; 
 
+            if (paymentChoice == "1")
+                paymentProcessor = new CreditCardPayment();
+            else
+                paymentProcessor = new PayPalPayment();
+
+            Order order = new Order() { Id = 1, Items = new List<string> { itemName }, TotalAmount = price };
+            OrderProcessor processor = new OrderProcessor(new OrderRepository(), paymentProcessor, new EmailNotification());
             processor.Process(order);
-            Console.WriteLine("Order processed.");
 
             Console.WriteLine("Press any key to exit...");
-            Console.ReadLine(); // Keeps the console open
+            Console.ReadLine();
         }
+
     }
 }
